@@ -110,7 +110,7 @@ async def main(system):
     """
 
     # Instantiate the Bluetooth LE handler/queue
-    ble_q = BLEventQ()
+    ble_q = BLEventQ.instance
     # The web client out_going queue
     web_out_queue = Queue()
     # Instantiate socket listener

@@ -30,8 +30,10 @@ class BLEventQ(Process):
        the :class:`bricknil.BLEventQ.q` Queue object.
 
     """
+    instance = None
 
     def __init__(self):
+        assert BLEventQ.instance == None
         super().__init__('BLE Event Q')
         self.adapter = None
         # User needs to make sure adapter is powered up and on
@@ -150,8 +152,6 @@ class BLEventQ(Process):
 
 
     async def connect(self, hub):
-        # Connect the messaging queue for communication between self and the hub
-        hub.ble_handler = self
         self.message(f'Starting scan for UART {hub.uart_uuid}')
 
         # HACK
@@ -183,5 +183,6 @@ class BLEventQ(Process):
 
         await self.get_messages(hub)
 
-
+if BLEventQ.instance == None:
+    BLEventQ.instance = BLEventQ()
 

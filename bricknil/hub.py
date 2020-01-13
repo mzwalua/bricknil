@@ -20,6 +20,7 @@ from asyncio import sleep, Queue, CancelledError
 from .process import Process
 from .sensor.peripheral import Peripheral  # for type check
 from .sockets import WebMessage
+from .ble_queue import BLEventQ
 
 class UnknownPeripheralMessage(Exception): pass
 class DifferentPeripheralOnPortError(Exception): pass
@@ -52,7 +53,7 @@ class Hub(Process):
     def __init__(self, name, query_port_info=False, ble_id=None):
         super().__init__(name)
         self.ble_id = ble_id
-        self.ble_handler = None
+        self.ble_handler = BLEventQ.instance
         self.query_port_info = query_port_info
         self.uart_uuid = uuid.UUID('00001623-1212-efde-1623-785feabcd123')
         self.char_uuid = uuid.UUID('00001624-1212-efde-1623-785feabcd123')
