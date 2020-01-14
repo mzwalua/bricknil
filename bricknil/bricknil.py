@@ -22,7 +22,7 @@
 
 import logging
 import pprint
-from asyncio import run, sleep, Queue, get_event_loop
+from asyncio import run, sleep, Queue, get_event_loop, all_tasks
 from asyncio import create_task as spawn
 from functools import partial, wraps
 import uuid
@@ -108,65 +108,69 @@ async def main(system):
 
     You normally don't need to use this directly, instead use start()
     """
+    try:
+        # Instantiate the Bluetooth LE handler/queue
+        ble_q = BLEventQ.instance
+        # The web client out_going queue
+        web_out_queue = Queue()
+        # Instantiate socket listener
+        # task_socket = await spawn(socket_server, web_out_queue, ('',25000))
+        # task_tcp = await spawn(bricknil_socket_server, web_out_queue, ('',25000))
+        # await task_tcp.join()
 
-    # Instantiate the Bluetooth LE handler/queue
-    ble_q = BLEventQ.instance
-    # The web client out_going queue
-    web_out_queue = Queue()
-    # Instantiate socket listener
-    # task_socket = await spawn(socket_server, web_out_queue, ('',25000))
-    # task_tcp = await spawn(bricknil_socket_server, web_out_queue, ('',25000))
-    # await task_tcp.join()
+        # Call the user's system routine to instantiate the processes
+        await system()
 
-    # Call the user's system routine to instantiate the processes
-    await system()
+        hub_tasks = []
+        hub_peripheral_listen_tasks = [] # Need to cancel these at the end
 
-    hub_tasks = []
-    hub_peripheral_listen_tasks = [] # Need to cancel these at the end
+        # Connect all the hubs first before enabling any of them
+        for hub in Hub.hubs:
+            hub.web_queue_out = web_out_queue
+            task_connect = spawn(ble_q.connect(hub))
+            await task_connect
 
-    # Connect all the hubs first before enabling any of them
-    for hub in Hub.hubs:
-        hub.web_queue_out = web_out_queue
-        task_connect = spawn(ble_q.connect(hub))
-        await task_connect
+        for hub in Hub.hubs:
+            # Start the peripheral listening loop in each hub
+            task_listen = spawn(hub.peripheral_message_loop())
+            hub_peripheral_listen_tasks.append(task_listen)
 
-    for hub in Hub.hubs:
-        # Start the peripheral listening loop in each hub
-        task_listen = spawn(hub.peripheral_message_loop())
-        hub_peripheral_listen_tasks.append(task_listen)
+            # Need to wait here until all the ports are set
+            # Use a faster timeout the first time (for speeding up testing)
+            first_delay = True
+            for name, peripheral in hub.peripherals.items():
+                while peripheral.port is None:
+                    hub.message_info(f"Waiting for peripheral {name} to attach to a port")
+                    if first_delay:
+                        first_delay = False
+                        await sleep(0.1)
+                    else:
+                        await sleep(1)
 
-        # Need to wait here until all the ports are set
-        # Use a faster timeout the first time (for speeding up testing)
-        first_delay = True
-        for name, peripheral in hub.peripherals.items():
-            while peripheral.port is None:
-                hub.message_info(f"Waiting for peripheral {name} to attach to a port")
-                if first_delay:
-                    first_delay = False
-                    await sleep(0.1)
-                else:
-                    await sleep(1)
+            # Start each hub
+            task_run = spawn(hub.run())
+            hub_tasks.append(task_run)
 
-        # Start each hub
-        task_run = spawn(hub.run())
-        hub_tasks.append(task_run)
+        # Now wait for the tasks to finish
+        ble_q.message_info(f'Waiting for hubs to end')
 
-    # Now wait for the tasks to finish
-    ble_q.message_info(f'Waiting for hubs to end')
+        for task in hub_tasks:
+            await task
+        ble_q.message_info(f'Hubs end')
+    finally:
+        await ble_q.disconnect()
+        for task in hub_peripheral_listen_tasks:
+            task.cancel()
 
-    for task in hub_tasks:
-        await task
-    ble_q.message_info(f'Hubs end')
-    await ble_q.disconnect()
-    for task in hub_peripheral_listen_tasks:
-        task.cancel()
+        # Print out the port information in debug mode
+        for hub in Hub.hubs:
+            if hub.query_port_info:
+                hub.message_info(pprint.pformat(hub.port_info))
 
-    # Print out the port information in debug mode
-    for hub in Hub.hubs:
-        if hub.query_port_info:
-            hub.message_info(pprint.pformat(hub.port_info))
+# Reference to the loop running
+__loop = None
 
-def start(user_system_setup_func): #pragma: no cover
+def start(user_system_setup_func, loop=None): #pragma: no cover
     """
         Main entry point into running everything.
 
@@ -176,7 +180,16 @@ def start(user_system_setup_func): #pragma: no cover
         - Initializing the bluetooth interface object
         - Starting up the user async co-routines inside the asyncio event loop
     """
-    loop = get_event_loop()
-    loop.run_until_complete(main(user_system_setup_func))
+    global __loop
+    __loop = get_event_loop()
+    __loop.run_until_complete(main(user_system_setup_func))
+
+def stop():
+    global __loop
+    if __loop != None:
+        tasks = all_tasks(__loop)
+        for task in tasks:
+            task.cancel()
+
 
 
