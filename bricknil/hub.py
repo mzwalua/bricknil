@@ -16,7 +16,7 @@
 
 """
 import uuid
-from asyncio import sleep, Queue, CancelledError
+from asyncio import sleep, Queue, CancelledError, create_task as spawn
 from .process import Process
 from .sensor.peripheral import Peripheral  # for type check
 from .sockets import WebMessage
@@ -39,6 +39,7 @@ class Hub(Process):
             hubs (list [`Hub`]) : Class attr to keep track of all Hub (and subclasses) instances
             ble_handler (`BLEventQ`) : Hub's Bluetooth LE handling object
             peripheral_queue (`asyncio.Queue`) : Incoming messages from :class:`bricknil.ble_queue.BLEventQ`
+            peripheral_task: (`asyncio.Task`) : Task processing incoming messages from `peripheral_queue`
             uart_uuid (`uuid.UUID`) : UUID broadcast by LEGO UARTs
             char_uuid (`uuid.UUID`) : Lego uses only one service characteristic for communicating with the UART services
             tx : Service characteristic for tx/rx messages that's set by :func:`bricknil.ble_queue.BLEventQ.connect`
@@ -62,6 +63,7 @@ class Hub(Process):
         self.port_to_peripheral = {}   # Quick mapping from a port number to a peripheral object
                                         # Only gets populated once the peripheral attaches itself physically
         self.peripheral_queue = Queue()  # Incoming messages from peripherals
+        self.peripheral_task = None # Task processing incoming messages, spawn in `connect()`
 
         # Keep track of port info as we get messages from the hub ('update_port' messages)
         self.port_info = {}
@@ -74,6 +76,36 @@ class Hub(Process):
         self.web_queue_out = None
 
         self.web_message = WebMessage(self)
+
+    async def connect(self):
+        """
+        Connects to physical hub.
+        """
+        await self.ble_handler.connect(self)
+        self.peripheral_task = spawn(self.peripheral_message_loop())
+
+        # Need to wait here until all the ports are set
+        # Use a faster timeout the first time (for speeding up testing)
+        first_delay = True
+        for name, peripheral in self.peripherals.items():
+            while peripheral.port is None:
+                self.message_info(f"Waiting for peripheral {name} to attach to a port")
+                if first_delay:
+                    first_delay = False
+                    await sleep(0.1)
+                else:
+                    await sleep(1)
+
+
+    async def disconnect(self):
+        """
+        Releases all resources, stops all (service) tasks and disconnects
+        from physical hub
+        """
+        if self.peripheral_task != None:
+            self.peripheral_task.cancel()
+        await self.ble_handler.disconnect(self)
+
 
 
     async def send_message(self, msg_name, msg_bytes, peripheral=None):

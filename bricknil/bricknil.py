@@ -122,32 +122,14 @@ async def main(system):
         await system()
 
         hub_tasks = []
-        hub_peripheral_listen_tasks = [] # Need to cancel these at the end
 
         # Connect all the hubs first before enabling any of them
         for hub in Hub.hubs:
             hub.web_queue_out = web_out_queue
-            task_connect = spawn(ble_q.connect(hub))
-            await task_connect
+            await hub.connect()
 
+        # Start each hub
         for hub in Hub.hubs:
-            # Start the peripheral listening loop in each hub
-            task_listen = spawn(hub.peripheral_message_loop())
-            hub_peripheral_listen_tasks.append(task_listen)
-
-            # Need to wait here until all the ports are set
-            # Use a faster timeout the first time (for speeding up testing)
-            first_delay = True
-            for name, peripheral in hub.peripherals.items():
-                while peripheral.port is None:
-                    hub.message_info(f"Waiting for peripheral {name} to attach to a port")
-                    if first_delay:
-                        first_delay = False
-                        await sleep(0.1)
-                    else:
-                        await sleep(1)
-
-            # Start each hub
             task_run = spawn(hub.run())
             hub_tasks.append(task_run)
 
@@ -158,14 +140,17 @@ async def main(system):
             await task
         ble_q.message_info(f'Hubs end')
     finally:
-        await ble_q.disconnect()
-        for task in hub_peripheral_listen_tasks:
-            task.cancel()
+        for hub in Hub.hubs:
+            await hub.disconnect()
 
         # Print out the port information in debug mode
         for hub in Hub.hubs:
             if hub.query_port_info:
                 hub.message_info(pprint.pformat(hub.port_info))
+
+        # At this point no device should be connected, but
+        # just to make sure...
+        await ble_q.disconnect_all()
 
 # Reference to the loop running
 __loop = None

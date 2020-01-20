@@ -41,7 +41,7 @@ class BLEventQ(Process):
         self.hubs = {}
         self.devices = []
 
-    async def disconnect(self):
+    async def disconnect_all(self):
         if len(self.devices) > 0:
             self.message(f'Terminating and disconnecting')
             for device in self.devices:
@@ -182,6 +182,15 @@ class BLEventQ(Process):
         self.hubs[hub.ble_id] = hub
 
         await self.get_messages(hub)
+
+    async def disconnect(self, hub):
+        if hub.tx == None:
+            return
+        device = hub.tx[0]
+        hub.tx = None
+        await device.disconnect()
+        del self.hubs[hub.ble_id]
+        self.devices.remove(device)
 
 if BLEventQ.instance == None:
     BLEventQ.instance = BLEventQ()
