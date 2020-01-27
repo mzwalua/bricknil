@@ -111,6 +111,34 @@ class TachoMotor(Motor):
                       capability.sense_pos,
                     ]
 
+    async def reset_pos(self, value=0):
+        """Reset absolute position of the motor to given `value`, i.e,
+           current position will be reported as `value`.
+
+           Examples::
+
+              await self.motor.rese_pos()   # Reset current position to 0
+
+           Args:
+              value (int) : Absolute position in degrees.
+
+           Notes:
+
+               Use command GotoAbsolutePosition
+                * 0x00 = hub id
+                * 0x81 = Port Output command
+                * port
+                * 0x11 = Upper nibble (0=buffer, 1=immediate execution), Lower nibble (0=No ack, 1=command feedback)
+                * 0x51 = Subcommand - WriteDirectModeData
+                * 0x02 = Mode 2
+                * value (int32)
+        """
+        value_bytes = list(pack('i', value))
+
+        b = [0x00, 0x81, self.port, 0x11, 0x51, 0x02] + value_bytes
+        await self.send_message(f'reset pos to {value}', b)
+
+
     async def set_pos(self, pos, speed=50, max_power=50):
         """Set the absolute position of the motor
 
