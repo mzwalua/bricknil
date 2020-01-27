@@ -18,7 +18,7 @@ from asyncio import sleep, current_task, create_task as spawn  # Needed for moto
 from enum import Enum
 from struct import pack
 
-from .peripheral import Peripheral
+from .peripheral import Peripheral, PeripheralDefinition
 
 class Motor(Peripheral):
     """Utility class for common functions shared between Train Motors, Internal Motors, and External Motors
@@ -320,7 +320,79 @@ class ExternalMotor(TachoMotor):
 
     _sensor_id = 0x26
 
-
+@PeripheralDefinition(
+        {  'combinable': 4,
+           'id': 46,
+           'input': 2,
+           'mode_combinations': [[1, 2, 3]],
+           'modes': {   0: {   'dataset_decimals': 0,
+                               'dataset_total_figures': 1,
+                               'dataset_type': '8b',
+                               'datasets': 1,
+                               'input_mapping': [],
+                               'name': 'POWER',
+                               'output': True,
+                               'output_mapping': ['Absolute'],
+                               'pct_range': (-100.0, 100.0),
+                               'raw_range': (-100.0, 100.0),
+                               'si_range': (-100.0, 100.0),
+                               'symbol': 'PCT'},
+                        1: {   'dataset_decimals': 0,
+                               'dataset_total_figures': 4,
+                               'dataset_type': '8b',
+                               'datasets': 1,
+                               'input': True,
+                               'input_mapping': ['Absolute'],
+                               'name': 'SPEED',
+                               'output': True,
+                               'output_mapping': ['Absolute'],
+                               'pct_range': (-100.0, 100.0),
+                               'raw_range': (-100.0, 100.0),
+                               'si_range': (-100.0, 100.0),
+                               'symbol': 'PCT'},
+                        2: {   'dataset_decimals': 0,
+                               'dataset_total_figures': 4,
+                               'dataset_type': '32b',
+                               'datasets': 1,
+                               'input': True,
+                               'input_mapping': ['Relative'],
+                               'name': 'POS',
+                               'output': True,
+                               'output_mapping': ['Relative'],
+                               'pct_range': (-100.0, 100.0),
+                               'raw_range': (-360.0, 360.0),
+                               'si_range': (-360.0, 360.0),
+                               'symbol': 'DEG'},
+                        3: {   'dataset_decimals': 0,
+                               'dataset_total_figures': 3,
+                               'dataset_type': '16b',
+                               'datasets': 1,
+                               'input': True,
+                               'input_mapping': ['Relative'],
+                               'name': 'APOS',
+                               'output': True,
+                               'output_mapping': ['Relative'],
+                               'pct_range': (-100.0, 100.0),
+                               'raw_range': (-360.0, 360.0),
+                               'si_range': (-360.0, 360.0),
+                               'symbol': 'DEG'},
+                        4: {   'dataset_decimals': 0,
+                               'dataset_total_figures': 1,
+                               'dataset_type': '8b',
+                               'datasets': 1,
+                               'input': True,
+                               'input_mapping': ['Relative'],
+                               'name': 'LOAD',
+                               'output': True,
+                               'output_mapping': ['Relative'],
+                               'pct_range': (0.0, 100.0),
+                               'raw_range': (0.0, 127.0),
+                               'si_range': (0.0, 127.0),
+                               'symbol': 'PCT'}},
+           'name': 'Technic Control+ Large Motor',
+           'output': 1,
+           'synchronizable': 8}
+)
 class CPlusLargeMotor(TachoMotor):
     """ Access the Technic Control Plus Large motors
 
@@ -352,10 +424,81 @@ class CPlusLargeMotor(TachoMotor):
             * :class:`InternalMotor` for connecting to the Boost hub built-in motors
 
     """
+    pass
 
-    _sensor_id = 0x2E
-
-
+@PeripheralDefinition(
+        {  'combinable': 4,
+           'id': 47,
+           'input': 2,
+           'mode_combinations': [[1, 2, 3]],
+           'modes': {   0: {   'dataset_decimals': 0,
+                               'dataset_total_figures': 1,
+                               'dataset_type': '8b',
+                               'datasets': 1,
+                               'input_mapping': [],
+                               'name': 'POWER',
+                               'output': True,
+                               'output_mapping': ['Absolute'],
+                               'pct_range': (-100.0, 100.0),
+                               'raw_range': (-100.0, 100.0),
+                               'si_range': (-100.0, 100.0),
+                               'symbol': 'PCT'},
+                        1: {   'dataset_decimals': 0,
+                               'dataset_total_figures': 4,
+                               'dataset_type': '8b',
+                               'datasets': 1,
+                               'input': True,
+                               'input_mapping': ['Absolute'],
+                               'name': 'SPEED',
+                               'output': True,
+                               'output_mapping': ['Absolute'],
+                               'pct_range': (-100.0, 100.0),
+                               'raw_range': (-100.0, 100.0),
+                               'si_range': (-100.0, 100.0),
+                               'symbol': 'PCT'},
+                        2: {   'dataset_decimals': 0,
+                               'dataset_total_figures': 4,
+                               'dataset_type': '32b',
+                               'datasets': 1,
+                               'input': True,
+                               'input_mapping': ['Relative'],
+                               'name': 'POS',
+                               'output': True,
+                               'output_mapping': ['Relative'],
+                               'pct_range': (-100.0, 100.0),
+                               'raw_range': (-360.0, 360.0),
+                               'si_range': (-360.0, 360.0),
+                               'symbol': 'DEG'},
+                        3: {   'dataset_decimals': 0,
+                               'dataset_total_figures': 3,
+                               'dataset_type': '16b',
+                               'datasets': 1,
+                               'input': True,
+                               'input_mapping': ['Relative'],
+                               'name': 'APOS',
+                               'output': True,
+                               'output_mapping': ['Relative'],
+                               'pct_range': (-100.0, 100.0),
+                               'raw_range': (-360.0, 360.0),
+                               'si_range': (-360.0, 360.0),
+                               'symbol': 'DEG'},
+                        4: {   'dataset_decimals': 0,
+                               'dataset_total_figures': 1,
+                               'dataset_type': '8b',
+                               'datasets': 1,
+                               'input': True,
+                               'input_mapping': ['Relative'],
+                               'name': 'LOAD',
+                               'output': True,
+                               'output_mapping': ['Relative'],
+                               'pct_range': (0.0, 100.0),
+                               'raw_range': (0.0, 127.0),
+                               'si_range': (0.0, 127.0),
+                               'symbol': 'PCT'}},
+           'name': 'Technic Control+ XL Motor',
+           'output': 1,
+           'synchronizable': 8}
+)
 class CPlusXLMotor(TachoMotor):
     """ Access the Technic Control Plus XL motors
 
@@ -387,9 +530,7 @@ class CPlusXLMotor(TachoMotor):
             * :class:`InternalMotor` for connecting to the Boost hub built-in motors
 
     """
-
-    _sensor_id = 0x2F
-
+    pass
 
 class TrainMotor(Motor):
     """

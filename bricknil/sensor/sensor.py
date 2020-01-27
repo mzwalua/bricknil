@@ -20,7 +20,7 @@ from enum import Enum, IntEnum
 from struct import pack
 
 from ..const import Color
-from .peripheral import Peripheral
+from .peripheral import Peripheral, PeripheralDefinition
 
 class VisionSensor(Peripheral):
     """ Access the Boost Vision/Distance Sensor
@@ -460,7 +460,7 @@ class VoltageSensor(Peripheral):
     allowed_combo = [ ]
 
 class CurrentSensor(Peripheral):
-    """Voltage sensor
+    """Current sensor
 
        Returns the raw mA value (0-4095) which probably needs to be scaled to 0-2444.
 
@@ -480,6 +480,121 @@ class CurrentSensor(Peripheral):
                 capability.sense_l: (1, 2),
                }
     allowed_combo = [ ]
+
+@PeripheralDefinition(
+    {'combinable': 0,
+            'id': 59,
+            'input': 2,
+            'modes': {   0: {   'dataset_decimals': 0,
+                                'dataset_total_figures': 3,
+                                'dataset_type': '16b',
+                                'datasets': 3,
+                                'input': True,
+                                'input_mapping': [   'Absolute',
+                                                     'Supports Functional '
+                                                     'Mapping 2.0}'],
+                                'name': 'POS',
+                                'output_mapping': [],
+                                'pct_range': (-100.0, 100.0),
+                                'raw_range': (-180.0, 180.0),
+                                'si_range': (-180.0, 180.0),
+                                'symbol': 'DEG'},
+                         1: {   'dataset_decimals': 0,
+                                'dataset_total_figures': 3,
+                                'dataset_type': '32b',
+                                'datasets': 1,
+                                'input': True,
+                                'input_mapping': ['Relative'],
+                                'name': 'IMP',
+                                'output_mapping': [],
+                                'pct_range': (0.0, 100.0),
+                                'raw_range': (0.0, 100.0),
+                                'si_range': (0.0, 100.0),
+                                'symbol': 'CNT'},
+                         2: {   'dataset_decimals': 0,
+                                'dataset_total_figures': 3,
+                                'dataset_type': '8b',
+                                'datasets': 2,
+                                'input_mapping': [],
+                                'name': 'CFG',
+                                'output': True,
+                                'output_mapping': ['Absolute'],
+                                'pct_range': (0.0, 100.0),
+                                'raw_range': (0.0, 255.0),
+                                'si_range': (0.0, 255.0),
+                                'symbol': ''}},
+            'name': 'Powered Up Hub IMU Position',
+            'output': 1,
+            'synchronizable': 0}
+)
+class PoweredUpHubIMUPosition(Peripheral):
+    pass
+
+@PeripheralDefinition(
+         {  'combinable': 0,
+            'id': 58,
+            'input': 2,
+            'modes': {   0: {   'dataset_decimals': 0,
+                                'dataset_total_figures': 3,
+                                'dataset_type': '16b',
+                                'datasets': 3,
+                                'input': True,
+                                'input_mapping': [   'Absolute',
+                                                     'Supports Functional '
+                                                     'Mapping 2.0}'],
+                                'name': 'ROT',
+                                'output_mapping': [],
+                                'pct_range': (-100.0, 100.0),
+                                'raw_range': (   -28571.419921875,
+                                                 28571.419921875),
+                                'si_range': (-2000.0, 2000.0),
+                                'symbol': 'DPS'}},
+            'name': 'Powered Up Hub IMU Gyro',
+            'output': 0,
+            'synchronizable': 0}
+)
+class PoweredUpHubIMUGyro(Peripheral):
+    pass
+
+@PeripheralDefinition(
+        {   'combinable': 0,
+            'id': 57,
+            'input': 2,
+            'modes': {   0: {   'dataset_decimals': 0,
+                                'dataset_total_figures': 3,
+                                'dataset_type': '16b',
+                                'datasets': 3,
+                                'input': True,
+                                'input_mapping': [   'Absolute',
+                                                     'Supports Functional '
+                                                     'Mapping 2.0}'],
+                                'name': 'GRV',
+                                'output_mapping': [],
+                                'pct_range': (-100.0, 100.0),
+                                'raw_range': (-32768.0, 32768.0),
+                                'si_range': (-8000.0, 8000.0),
+                                'symbol': 'mG'},
+                         1: {   'dataset_decimals': 0,
+                                'dataset_total_figures': 0,
+                                'dataset_type': '8b',
+                                'datasets': 1,
+                                'input': True,
+                                'input_mapping': [   'Absolute',
+                                                     'Supports Functional '
+                                                     'Mapping 2.0}'],
+                                'name': 'CAL',
+                                'output_mapping': [],
+                                'pct_range': (-100.0, 100.0),
+                                'raw_range': (1.0, 1.0),
+                                'si_range': (1.0, 1.0),
+                                'symbol': ''}},
+            'name': 'Powered Up Hub IMU Accelerometer',
+            'output': 0,
+            'synchronizable': 0}
+)
+class PoweredUpHubIMUAccelerometer(Peripheral):
+    pass
+
 
 class DuploSpeedSensor(Peripheral):
     """Speedometer on Duplo train base that measures front wheel speed.
