@@ -81,7 +81,15 @@ class Peripheral(Process):
 
     """
     _DEFAULT_THRESHOLD = 1
-    Dataset = namedtuple('Dataset', ['n', 'w', 'min', 'max'])
+
+    # Description of a dataset
+    #
+    # * nvalues: number of values in dataset
+    # * nbytes:  size of *each* value in the dataset in *bytes* (1, 2 or 4)
+    # * minval:  minimal value
+    # * maxval:  maximal value
+    #
+    Dataset = namedtuple('Dataset', ['nvalues', 'nbytes', 'minval', 'maxval'])
 
     def __init__(self, name, port=None, capabilities=[]):
         super().__init__(name)

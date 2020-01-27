@@ -516,8 +516,8 @@ class DuploSpeedSensor(Peripheral):
                        ('sense_count', 1),
                        ])
 
-    datasets = { capability.sense_speed: Peripheral.Dataset(n=1, w=2, min=-300, max=300),
-                 capability.sense_count: Peripheral.Dataset(n=1, w=4, min=-(1<<31), max=(1<<31-1)),
+    datasets = { capability.sense_speed: Peripheral.Dataset(nvalues=1, nbytes=2, minval=-300, maxval=300),
+                 capability.sense_count: Peripheral.Dataset(nvalues=1, nbytes=4, minval=-(1<<31), maxval=(1<<31-1)),
                 }
 
     allowed_combo = [ capability.sense_speed,
