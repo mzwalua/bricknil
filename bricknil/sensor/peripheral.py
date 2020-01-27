@@ -23,6 +23,48 @@ from ..process import Process
 from asyncio import sleep, current_task, create_task as spawn
 from ..const import DEVICES
 
+class PeripheralDefinition(object):
+    """Class decorator to automagically define peripheral based on definition
+       dictionary. See users
+    """
+    def __init__(self, properties):
+        self._props = properties
+
+    def __call__(self, cls):
+        # Define _sensor_id
+        cls._sensor_id = self._props['id']
+
+        # Define capabilities
+        def make_name(dataset_def):
+            return 'sense_' + dataset_def['name'].lower()
+
+        cls.capability = Enum('capability', [(make_name(p), i) for i, p in self._props['modes'].items()])
+
+        # Define datasets
+        def make_dataset(dataset_def):
+            def make_nbytes(string):
+                if string == '8b':
+                    return 1
+                elif string == '16b':
+                    return 2
+                elif string == '32b':
+                    return 4
+                else:
+                    raise Exception(f'Unssuported dataset bitwidth: {string}')
+
+            return Peripheral.Dataset(nvalues=dataset_def['datasets'],
+                                      nbytes=make_nbytes(dataset_def['dataset_type']),
+                                      minval=dataset_def['raw_range'][0],
+                                      maxval=dataset_def['raw_range'][1])
+        cls.datasets = { cls.capability(i) : make_dataset(p) for i, p in self._props['modes'].items()}
+
+        # Define allowed_combo
+        if self._props['combinable'] == 0:
+            cls.allowed_combo = []
+        else:
+            cls.allowed_combo = [cap for cap in cls.capability.__members__.values()]
+
+        return cls
 
 class Peripheral(Process):
     """Abstract base class for any Lego Boost/PoweredUp/WeDo peripherals
