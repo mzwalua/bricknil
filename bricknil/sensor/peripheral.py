@@ -72,6 +72,20 @@ class Peripheral(Process):
        A LEGO sensor can provide either a single_ sensing capability, or a combined_  mode where it returns multiple
        sensing values.  All the details can be found in the official protocol description.
 
+       List of peripheral capabilities is in 'capability' class variable.
+
+       Actual values from sensors are stored in `value` dictionary keyed by the sensing capability. For example, to access current speed of a an XL motor, the canonical way is:
+
+           speed = motor.value[XLMotor.capability.sense_speed]
+
+        This is, however, bit verbose so shortcuts are provided:
+
+           speed = motor[XLMotor.capability.sense_speed]
+           speed = motor['sense_speed']
+           speed = motor.sense_speed
+
+       Notes::
+
        * **Single capability** - This is the easiest to handle:
             * Send a 0x41 Port Input Format Setup command to put the sensor port into the respective mode and activate updates
             * Read back the 0x45 Port Value(Single) messages with updates from the sensor on the respective mode
@@ -141,6 +155,17 @@ class Peripheral(Process):
         self.message_handler = None
         self.web_queue_output = None
         self.capabilities, self.thresholds = self._get_validated_capabilities(capabilities)
+
+    def __getattr__(self, name):
+        return self[name]
+
+    def __getitem__(self, cap):
+        if (isinstance(cap, str)):
+            cap = self.capability.__members__[cap]
+        elif (isinstance(cap, int)):
+            cap = self.capability(cap)
+        return self.value[cap]
+
 
     def _get_validated_capabilities(self, caps):
         """Convert capabilities in different formats (string, tuple, etc)
