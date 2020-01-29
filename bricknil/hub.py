@@ -136,8 +136,9 @@ class Hub(Process):
                         await self.web_message.send(peripheral, f'value change mode: {cap.value} = {peripheral.value[cap]}')
                         #await self.web_queue_out.put( f'{self.name}|{cls_name}|{peripheral.name}|{peripheral.port}|value change mode: {cap.value} = {peripheral.value[cap]}\r\n'.encode('utf-8') )
             handler_name = f'{peripheral.name}_change'
-            handler = getattr(self, handler_name)
-            await handler()
+            if hasattr(self, handler_name):
+                handler = getattr(self, handler_name)
+                await handler()
         elif msg == 'attach':
             port, device_name = data
             peripheral = await self.connect_peripheral_to_port(device_name, port)

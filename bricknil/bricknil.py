@@ -89,12 +89,6 @@ class attach:
         def wrapper_f(*args, **kwargs):
             #print(f'type of cls is {type(cls)}')
             peripheral = self.peripheral_type(**self.kwargs)
-
-            # Ugly, but scan through and check if any of the capabilities are sense_*
-            if any([cap.name.startswith('sense') for cap in peripheral.capabilities]):
-                handler_name = f'{peripheral.name}_change'
-                assert hasattr(cls, handler_name), f'{cls.__name__} needs a handler {handler_name}'
-            # Create the hub process and attach this peripheral
             o = cls(*args, **kwargs)
             o.message_debug(f"Decorating class {cls.__name__} with {self.peripheral_type.__name__}")
             o.attach_sensor(peripheral)
