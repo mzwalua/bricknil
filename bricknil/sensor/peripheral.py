@@ -17,6 +17,7 @@
 """
 import struct
 from enum import Enum
+from itertools import chain
 from collections import namedtuple
 
 from ..process import Process
@@ -147,6 +148,8 @@ class Peripheral(Process):
     #
     Dataset = namedtuple('Dataset', ['nvalues', 'nbytes', 'minval', 'maxval'])
 
+    _signals_ = [ 'notify' ]
+
     def __init__(self, name, port=None, capabilities=[]):
         super().__init__(name)
         self.port = port
@@ -157,7 +160,10 @@ class Peripheral(Process):
         self.capabilities, self.thresholds = self._get_validated_capabilities(capabilities)
 
     def __getattr__(self, name):
-        return self[name]
+        if name in self.capability.__members__.keys():
+            return self[name]
+        else:
+            raise AttributeError()
 
     def __getitem__(self, cap):
         if (isinstance(cap, str)):
@@ -166,6 +172,9 @@ class Peripheral(Process):
             cap = self.capability(cap)
         return self.value[cap]
 
+    def signals(self):
+        mine = map(lambda k: 'notify::' + k, self.capability.__members__.keys())
+        return chain(mine, super().signals())
 
     def _get_validated_capabilities(self, caps):
         """Convert capabilities in different formats (string, tuple, etc)
@@ -229,17 +238,19 @@ class Peripheral(Process):
                 msg (bytearray) : the sensor message
 
             Returns:
-                None
+                a list of capabilities whose value had changed.
 
             Side-effects:
                 self.value
 
         """
+        changed = []
         msg.pop(0)  # Remove the leading 0 (since we never have more than 7 datasets even with all the combo modes activated
         # The next byte is a bit mask of the mode/dataset entries present in this value
         modes = msg.pop(0)
         dataset_i = 0
-        for cap in self.capabilities:  # This is the order we prgogramed the sensor
+        for cap in self.capabilities:  # This is the order we programmed the sensor
+            value_changed = False
             n_datasets, byte_count = self.datasets[cap][0:2]
             for dataset in range(n_datasets):
                 if modes & (1<<dataset_i):  # Check if i'th bit of mode is set
@@ -250,10 +261,17 @@ class Peripheral(Process):
                     msg = msg[byte_count:]
                     val = self._convert_bytes(data, byte_count)
                     if n_datasets == 1:
+                        if self.value[cap] != val:
+                            value_changed = True
                         self.value[cap] = val
                     else:
+                        if self.value[cap][dataset] != val:
+                            value_changed = True
                         self.value[cap][dataset] = val
                 dataset_i += 1
+            if value_changed:
+                changed.append(cap)
+        return changed
 
 
 
@@ -312,21 +330,35 @@ class Peripheral(Process):
                 * Set each dict entry to `self.value` to either a list of multiple values or a single value
 
         """
+        changed = []
         msg = bytearray(msg_bytes)
         if len(self.capabilities)==0:
             self.value = msg
         if len(self.capabilities)==1:
             capability = self.capabilities[0]
             datasets, bytes_per_dataset = self.datasets[capability][0:2]
+            value_changed = False
             for i in range(datasets):
                 msg_ptr = i*bytes_per_dataset
                 val = self._convert_bytes(msg[msg_ptr: msg_ptr+bytes_per_dataset], bytes_per_dataset)
                 if datasets==1:
+                    if self.value[capability] != val:
+                        value_changed = True
                     self.value[capability] = val
                 else:
+                    if self.value[capability][i] != val:
+                        value_changed = True
                     self.value[capability][i] = val
+            if value_changed:
+                changed.append(capability)
         if len(self.capabilities) > 1:
-            await self._parse_combined_sensor_values(msg)
+            changed = await self._parse_combined_sensor_values(msg)
+        # Now, emit 'notify::*' for each changed capability and then generic
+        # 'notify'
+        if len(changed) > 0:
+            for capability in changed:
+                await self.emit('notify::' + capability.name, capability, self.value[capability])
+            await self.emit("notify")
 
     async def activate_updates(self):
         """ Send a message to the sensor to activate updates
