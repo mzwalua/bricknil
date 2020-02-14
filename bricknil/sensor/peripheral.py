@@ -202,78 +202,36 @@ class Peripheral(Process):
                 validated_caps.append(enum_cap)
         return validated_caps, thresholds
 
-    def _convert_bytes(self, msg_bytes:bytearray, byte_count):
-        """Convert bytearry into a set of values based on byte_count per value
-
-           Args:
-                msg_bytes (bytearray): Bytes to convert
-                byte_count (int): How many bytes per value to use when computer (can be 1, 2, or 4)
-
-           Returns:
-                If a single value, then just that value
-                If multiple values, then a list of those values
-                Value can be either uint8, uint16, or uint32 depending on value of `byte_count`
+    def _extract_value(self, msg_bytes:bytearray, offset, byte_count):
+        """
+            Extract and return a single signed integer value from `msg_bytes`
+            starting at `offset`. The integer can be either 8, 16 or 32bit,
+            depending on `byte_count`, all little endians.
         """
         if byte_count == 1:   # just an int8
-            val = struct.unpack('<b', msg_bytes)[0]
+            val = struct.unpack_from('<b', msg_bytes, offset)[0]
         elif byte_count == 2: # int16 little-endian
-            val = struct.unpack('<h', msg_bytes)[0]
+            val = struct.unpack_from('<h', msg_bytes, offset)[0]
         elif byte_count == 4: # int32 little-endian
-            val = struct.unpack('<i', msg_bytes)[0]
+            val = struct.unpack_from('<i', msg_bytes, offset)[0]
         else:
             self.message_error(f'Cannot convert array of {msg_bytes} length {len(msg_bytes)} to python datatype')
             val = None
         return val
 
-    async def _parse_combined_sensor_values(self, msg: bytearray):
+    def _extract_reading(self, capability, msg: bytearray, offset = 0):
         """
-            Byte sequence is as follows:
-                # uint16 where each set bit indicates data value from that mode is present
-                  (e.g. 0x00 0x05 means Mode 2 and Mode 0 data is present
-                # The data from the lowest Mode number comes first in the subsequent bytes
-                # Each Mode has a number of datasets associated with it (RGB for example is 3 datasets), and
-                  a byte-width per dataset (RGB dataset is each a uint8)
-
-            Args:
-                msg (bytearray) : the sensor message
-
-            Returns:
-                a list of capabilities whose value had changed.
-
-            Side-effects:
-                self.value
-
+            Parse single sensor reading from given message and update self.value.
+            Return the number of bytes of this value
         """
-        changed = []
-        msg.pop(0)  # Remove the leading 0 (since we never have more than 7 datasets even with all the combo modes activated
-        # The next byte is a bit mask of the mode/dataset entries present in this value
-        modes = msg.pop(0)
-        dataset_i = 0
-        for cap in self.capabilities:  # This is the order we programmed the sensor
-            value_changed = False
-            n_datasets, byte_count = self.datasets[cap][0:2]
-            for dataset in range(n_datasets):
-                if modes & (1<<dataset_i):  # Check if i'th bit of mode is set
-                    # Data corresponding to this dataset is present!
-                    # Now, pop off however many bytes are associated with this
-                    # dataset
-                    data = msg[0:byte_count]
-                    msg = msg[byte_count:]
-                    val = self._convert_bytes(data, byte_count)
-                    if n_datasets == 1:
-                        if self.value[cap] != val:
-                            value_changed = True
-                        self.value[cap] = val
-                    else:
-                        if self.value[cap][dataset] != val:
-                            value_changed = True
-                        self.value[cap][dataset] = val
-                dataset_i += 1
-            if value_changed:
-                changed.append(cap)
-        return changed
-
-
+        nvalues, nbytes = self.datasets[capability][0:2]
+        for i in range(nvalues):
+            v = self._extract_value(msg, offset + i * nbytes, nbytes)
+            if nvalues==1:
+                self.value[capability] = v
+            else:
+                self.value[capability][i] = v
+        return nvalues * nbytes
 
     async def send_message(self, msg, msg_bytes):
         """ Send outgoing message to BLEventQ """
@@ -330,33 +288,32 @@ class Peripheral(Process):
                 * Set each dict entry to `self.value` to either a list of multiple values or a single value
 
         """
-        changed = []
+        updated = []
         msg = bytearray(msg_bytes)
         if len(self.capabilities)==0:
             self.value = msg
         if len(self.capabilities)==1:
             capability = self.capabilities[0]
-            datasets, bytes_per_dataset = self.datasets[capability][0:2]
-            value_changed = False
-            for i in range(datasets):
-                msg_ptr = i*bytes_per_dataset
-                val = self._convert_bytes(msg[msg_ptr: msg_ptr+bytes_per_dataset], bytes_per_dataset)
-                if datasets==1:
-                    if self.value[capability] != val:
-                        value_changed = True
-                    self.value[capability] = val
-                else:
-                    if self.value[capability][i] != val:
-                        value_changed = True
-                    self.value[capability][i] = val
-            if value_changed:
-                changed.append(capability)
+            self._extract_reading(capability, msg, 0)
+            updated.append(capability)
         if len(self.capabilities) > 1:
-            changed = await self._parse_combined_sensor_values(msg)
-        # Now, emit 'notify::*' for each changed capability and then generic
+            # First two bytes define a bitmask of (configured) capabilities
+            # whose readings are in this message. Leading byte should be 0 since
+            # we never have more than 7 datasets even with all the combo modes
+            # activated. Second byte is the actual bitmask.
+            assert msg[0] == 0
+            assert msg[1] != 0
+            def present(index):
+                return msg[1] & (1<<index)
+            offset = 2
+            for index, capability in enumerate(self.capabilities):
+                if present(index):
+                    offset += self._extract_reading(capability, msg, offset)
+                    updated.append(capability)
+        # Now, emit 'notify::*' for each updated capability and then generic
         # 'notify'
-        if len(changed) > 0:
-            for capability in changed:
+        if len(updated) > 0:
+            for capability in updated:
                 await self.emit('notify::' + capability.name, capability, self.value[capability])
             await self.emit("notify")
 
