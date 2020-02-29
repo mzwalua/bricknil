@@ -19,7 +19,6 @@ import uuid
 from asyncio import sleep, Queue, CancelledError, create_task as spawn
 from .process import Process
 from .sensor.peripheral import Peripheral  # for type check
-from .sockets import WebMessage
 from .ble_queue import BLEventQ
 
 class UnknownPeripheralMessage(Exception): pass
@@ -71,12 +70,6 @@ class Hub(Process):
         # Register this hub
         Hub.hubs.append(self)
 
-        # Outgoing messages to web client
-        # Assigned during system instantiaion before ble connect
-        self.web_queue_out = None
-
-        self.web_message = WebMessage(self)
-
     async def connect(self):
         """
         Connects to physical hub.
@@ -115,10 +108,6 @@ class Hub(Process):
         while not self.tx:  # Need to make sure we have a handle to the uart
             await sleep(1)
         await self.ble_handler.send_message(self.tx, msg_bytes)
-        if self.web_queue_out and peripheral:
-            cls_name = peripheral.__class__.__name__
-            await self.web_message.send(peripheral, msg_name)
-            #await self.web_queue_out.put( f'{self.name}|{cls_name}|{peripheral.name}|{peripheral.port}|{msg_name}\r\n'.encode('utf-8') )
 
     async def recv_message(self, msg, data):
         """Receive and process message (notification) from the hub.
@@ -129,12 +118,6 @@ class Hub(Process):
             peripheral = self.port_to_peripheral[port]
             await peripheral.update_value(msg_bytes)
             self.message_debug(f'peripheral msg: {peripheral} {msg}')
-            if self.web_queue_out:
-                cls_name = peripheral.__class__.__name__
-                if len(peripheral.capabilities) > 0:
-                    for cap in peripheral.value:
-                        await self.web_message.send(peripheral, f'value change mode: {cap.value} = {peripheral.value[cap]}')
-                        #await self.web_queue_out.put( f'{self.name}|{cls_name}|{peripheral.name}|{peripheral.port}|value change mode: {cap.value} = {peripheral.value[cap]}\r\n'.encode('utf-8') )
             handler_name = f'{peripheral.name}_change'
             if hasattr(self, handler_name):
                 handler = getattr(self, handler_name)

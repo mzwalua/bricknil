@@ -31,7 +31,6 @@ import uuid
 from .process import Process
 from .ble_queue import BLEventQ
 from .hub import PoweredUpHub, BoostHub, Hub
-from .sockets import bricknil_socket_server
 
 import threading
 
@@ -105,12 +104,6 @@ async def main(system):
     try:
         # Instantiate the Bluetooth LE handler/queue
         ble_q = BLEventQ.instance
-        # The web client out_going queue
-        web_out_queue = Queue()
-        # Instantiate socket listener
-        # task_socket = await spawn(socket_server, web_out_queue, ('',25000))
-        # task_tcp = await spawn(bricknil_socket_server, web_out_queue, ('',25000))
-        # await task_tcp.join()
 
         # Call the user's system routine to instantiate the processes
         await system()
@@ -119,7 +112,6 @@ async def main(system):
 
         # Connect all the hubs first before enabling any of them
         for hub in Hub.hubs:
-            hub.web_queue_out = web_out_queue
             await hub.connect()
 
         # Start each hub
