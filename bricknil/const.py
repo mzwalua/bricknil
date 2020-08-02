@@ -1,11 +1,11 @@
-# Copyright 2019 Virantha N. Ekanayake 
-# 
+# Copyright 2019 Virantha N. Ekanayake
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 # http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,7 +19,7 @@ import platform
 
 class Color(Enum):
     """11 colors"""
-    black = 0 
+    black = 0
     pink = 1
     purple = 2
     blue = 3
@@ -59,5 +59,6 @@ DEVICES = {     0x0001:   'Motor',
                 0x003A:   'Powered Up Hub IMU Gyro',
                 0x003B:   'Powered Up Hub IMU Position',
                 0x003C:   'Powered Up Hub IMU Temperature',
+                0x004C:   'Technic Control+ Large Angular Positon Motor',
             }
 
