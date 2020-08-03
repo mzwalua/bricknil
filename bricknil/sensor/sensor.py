@@ -99,6 +99,7 @@ class VisionSensor(Peripheral):
                       capability.sense_rgb,
                     ]
 
+
 class InternalTiltSensor(Peripheral):
     """
         Access the internal tilt sensor in the Boost Move Hub.
@@ -185,7 +186,6 @@ class InternalTiltSensor(Peripheral):
             self.value[so] = self.orientation(self.value[so])
 
 
-
 class ExternalMotionSensor(Peripheral):
     """Access the external motion sensor (IR) provided in the Wedo sets
 
@@ -215,6 +215,7 @@ class ExternalMotionSensor(Peripheral):
                  capability.sense_count: (1, 4),
                 }
     allowed_combo = [ ]
+
 
 class ExternalTiltSensor(Peripheral):
     """Access the External tilt sensor provided in the Wedo sets
@@ -275,8 +276,6 @@ class ExternalTiltSensor(Peripheral):
             self.value[so] = self.orientation(self.value[so])
 
 
-
-
 class RemoteButtons(Peripheral):
     """Represents one set of '+', '-', 'red' buttons on the PoweredHub Remote
 
@@ -331,6 +330,7 @@ class RemoteButtons(Peripheral):
         """Return whether `value` reflects that the RED button is pressed"""
         button_list = self.value[self.capability.sense_press]
         return button_list[self.Button.RED] == 1
+
 
 class Button(Peripheral):
     """ Register to be notified of button presses on the Hub (Boost or PoweredUp)
@@ -437,6 +437,7 @@ class DuploVisionSensor(Peripheral):
                       capability.sense_rgb,
                     ]
 
+
 class VoltageSensor(Peripheral):
     """Voltage sensor
 
@@ -459,6 +460,7 @@ class VoltageSensor(Peripheral):
                }
     allowed_combo = [ ]
 
+
 class CurrentSensor(Peripheral):
     """Current sensor
 
@@ -480,6 +482,32 @@ class CurrentSensor(Peripheral):
                 capability.sense_l: (1, 2),
                }
     allowed_combo = [ ]
+
+
+@PeripheralDefinition(
+   {'combinable': 0,
+      'id': 60,
+      'input': 2,
+      'modes': {0: {'dataset_decimals': 1,
+                    'dataset_total_figures': 5,
+                    'dataset_type': '16b',
+                    'datasets': 1,
+                    'input': True,
+                    'input_mapping': ['Absolute',
+                                      'Supports Functional Mapping 2.0}'],
+                    'name': 'TEMP',
+                    'output_mapping': [],
+                    'pct_range': (-100.0, 100.0),
+                    'raw_range': (-900.0, 900.0),
+                    'si_range': (-90.0, 90.0),
+                    'symbol': 'DEG'}},
+      'name': 'Powered Up Hub IMU Temperature',
+      'output': 0,
+      'synchronizable': 0}
+)
+class PoweredUpHubTemperature(Peripheral):
+    pass
+
 
 @PeripheralDefinition(
     {'combinable': 0,
@@ -530,6 +558,7 @@ class CurrentSensor(Peripheral):
 class PoweredUpHubIMUPosition(Peripheral):
     pass
 
+
 @PeripheralDefinition(
          {  'combinable': 0,
             'id': 58,
@@ -555,6 +584,7 @@ class PoweredUpHubIMUPosition(Peripheral):
 )
 class PoweredUpHubIMUGyro(Peripheral):
     pass
+
 
 @PeripheralDefinition(
         {   'combinable': 0,
