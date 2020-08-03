@@ -38,7 +38,7 @@ class Motor(Peripheral):
             Args:
                 speed (int) : Range -100 to 100 where negative numbers are reverse.
                     Use 0 to put the motor into neutral.
-                    255 will do a hard brake
+                    255 will do a hard brake - according to "peripherial.py _convert_speed_to_val" ist should be "127" (?)
         """
         await self._cancel_existing_differet_ramp()
         self.speed = speed
