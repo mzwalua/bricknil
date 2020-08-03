@@ -505,7 +505,7 @@ class CurrentSensor(Peripheral):
       'output': 0,
       'synchronizable': 0}
 )
-class PoweredUpHubTemperature(Peripheral):
+class PoweredUpHubIMUTemperature(Peripheral):
     pass
 
 
