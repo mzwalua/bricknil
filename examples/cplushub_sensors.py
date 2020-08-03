@@ -18,8 +18,8 @@ from bricknil.sensor import Button
 @attach(LED, name='hub_led')
 #@attach(VoltageSensor, name='voltage', capabilities=['sense_l'])
 #@attach(CurrentSensor, name='current', capabilities=['sense_l'])
-@attach(PoweredUpHubTemperature, name='temp1', port=60, capabilities=['sense_temp'])
-@attach(PoweredUpHubTemperature, name='temp2', port=96, capabilities=['sense_temp'])
+@attach(PoweredUpHubIMUTemperature, name='temp1', port=61, capabilities=['sense_temp'])
+@attach(PoweredUpHubIMUTemperature, name='temp2', port=96, capabilities=['sense_temp'])
 #@attach(PoweredUpHubIMUPosition, name='IMUPos', capabilities=['sense_pos'])
 class truck(CPlusHub):
 
@@ -69,5 +69,5 @@ async def system():
     hub = truck('truck', True)
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
+#    logging.basicConfig(level=logging.DEBUG)
     start(system)
