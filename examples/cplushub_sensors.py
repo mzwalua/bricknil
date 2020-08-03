@@ -18,8 +18,10 @@ from bricknil.sensor import Button
 @attach(LED, name='hub_led')
 #@attach(VoltageSensor, name='voltage', capabilities=['sense_l'])
 #@attach(CurrentSensor, name='current', capabilities=['sense_l'])
-@attach(PoweredUpHubIMUTemperature, name='temp1', port=61, capabilities=['sense_temp'])
+#@attach(PoweredUpHubIMUTemperature, name='temp1', port=61, capabilities=['sense_temp'])
 @attach(PoweredUpHubIMUTemperature, name='temp2', port=96, capabilities=['sense_temp'])
+#@attach(PoweredUpHubIMUAccelerometer, name='IMUaccel', capabilities=['sense_grv'])
+#@attach(PoweredUpHubIMUGyro, name='IMUGyro', capabilities=['sense_rot'])
 #@attach(PoweredUpHubIMUPosition, name='IMUPos', capabilities=['sense_pos'])
 class truck(CPlusHub):
 
@@ -37,13 +39,21 @@ class truck(CPlusHub):
 #       print('current: ',self.current.sense_l);
 #       pass
 
-    async def temp1_change(self):
-        print('temp1: ',self.temp1.sense_temp);
-        pass
+#    async def temp1_change(self):
+#        print('temp1: ',self.temp1.sense_temp);
+#        pass
 
     async def temp2_change(self):
         print('temp2: ',self.temp2.sense_temp);
         pass
+
+#    async def IMUaccel_change(self):
+#        print('IMUaccel: ',self.IMUaccel.sense_grv);
+#        pass
+
+#    async def IMUGyro_change(self):
+#        print('IMUGyro: ',self.IMUGyro.sense_rot);
+#        pass
 
 #    async def IMUPos_change(self):
 #       print('IMUPos: ',self.IMUPos.sense_pos);
