@@ -532,6 +532,83 @@ class CPlusXLMotor(TachoMotor):
     """
     pass
 
+
+@PeripheralDefinition(
+{'combinable': 4,
+     'id': 76,
+     'input': 2,
+     'mode_combinations': [[1, 2, 3]],
+     'modes': {0: {'dataset_decimals': 0,
+                   'dataset_total_figures': 4,
+                   'dataset_type': '8b',
+                   'datasets': 1,
+                   'input_mapping': [],
+                   'name': 'POWER',
+                   'output': True,
+                   'output_mapping': ['Absolute',
+                                      'Supports Functional Mapping 2.0}'],
+                   'pct_range': (-100.0, 100.0),
+                   'raw_range': (-100.0, 100.0),
+                   'si_range': (-100.0, 100.0),
+                   'symbol': 'PCT'},
+               1: {'dataset_decimals': 0,
+                   'dataset_total_figures': 4,
+                   'dataset_type': '8b',
+                   'datasets': 1,
+                   'input': True,
+                   'input_mapping': ['Absolute', 'NA'],
+                   'name': 'SPEED',
+                   'output': True,
+                   'output_mapping': ['Absolute',
+                                      'NA',
+                                      'Supports Functional Mapping 2.0}'],
+                   'pct_range': (-100.0, 100.0),
+                   'raw_range': (-100.0, 100.0),
+                   'si_range': (-100.0, 100.0),
+                   'symbol': 'PCT'},
+               2: {'dataset_decimals': 0,
+                   'dataset_total_figures': 11,
+                   'dataset_type': '32b',
+                   'datasets': 1,
+                   'input': True,
+                   'input_mapping': ['Relative', 'NA'],
+                   'name': 'POS',
+                   'output': True,
+                   'output_mapping': ['Relative',
+                                      'NA',
+                                      'Supports Functional Mapping 2.0}'],
+                   'pct_range': (-100.0, 100.0),
+                   'raw_range': (-360.0, 360.0),
+                   'si_range': (-360.0, 360.0),
+                   'symbol': 'DEG'},
+               3: {'dataset_decimals': 0,
+                   'dataset_total_figures': 3,
+                   'dataset_type': '16b',
+                   'datasets': 1,
+                   'input': True,
+                   'input_mapping': ['NA', 'Absolute', 'NA'],
+                   'name': 'APOS',
+                   'output': True,
+                   'output_mapping': ['NA',
+                                      'Absolute',
+                                      'NA',
+                                      'Supports Functional Mapping 2.0}'],
+                   'pct_range': (-200.0, 200.0),
+                   'raw_range': (-180.0, 179.0),
+                   'si_range': (-180.0, 179.0),
+                   'symbol': 'DEG'}},
+     'name': 'Technic Control+ Large Angular Position Motor',
+     'output': 1,
+     'synchronizable': 8}
+)
+class CPlusLargeAngularPositionMotor(TachoMotor):
+    """ Access the Technic Control Plus Large Angular Position motors
+
+        Not tested yet !!!
+    """
+    pass
+
+
 class TrainMotor(Motor):
     """
         Connects to the train motors.
