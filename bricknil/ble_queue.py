@@ -167,7 +167,7 @@ class BLEventQ(Process):
         self.message(f"found device {self.device.name}")
 
 
-        device = bleak.BleakClient(address=self.device.address)
+        device = bleak.BleakClient(address_or_ble_device=self.device.address)
         self.devices.append(device)
         await device.connect()
 

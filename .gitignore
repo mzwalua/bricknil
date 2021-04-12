@@ -47,6 +47,8 @@ docs/_autosummary
 
 # Virtual Environment
 .venv/
+venv/
+*.venv/
 
 *.retry
 wpa_supplicant.conf
@@ -56,3 +58,6 @@ wpa_supplicant.conf
 
 .hypothesis/
 .vscode/
+
+# pycharm
+*.idea
