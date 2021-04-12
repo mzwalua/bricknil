@@ -13,10 +13,10 @@ from bricknil.sensor.motor import CPlusLargeAngularPositionMotor
 @attach(Button, name='hub_btn', capabilities=['sense_press'])
 @attach(LED, name='hub_led')
 @attach(CPlusXLMotor, name='drive', port=0, capabilities=['sense_pos'])
-@attach(CPlusLargeAngularPositionMotor, name='mot', port=3, capabilities=['sense_pos'])
+@attach(CPlusLargeAngularPositionMotor, name='mot', port=1, capabilities=['sense_pos'])
 class truck(CPlusHub):
 
-    stop=0
+    stop = 0
 
     async def hub_btn_change(self):
         print('hub_btn')
@@ -32,22 +32,21 @@ class truck(CPlusHub):
 
     async def run(self):
         print('Running')
-        print('ID: ',self.ble_id);
-
-        await self.hub_led.set_color(Color.green)
+        print('ID: ',self.ble_id)
 
         await sleep(2)
+        await self.hub_led.set_color(Color.green)
 
-#        await self.mot.set_pos(-45, speed=100)
+        await self.mot.set_pos(-45, speed=100)
         await self.drive.set_speed(20)
         await sleep(2)
 
-        self.stop=0
+        self.stop = 0
         while 1:
             await sleep(0.001)
 
-            if self.stop==1:
-#                await self.mot.set_pos(0, speed=100)
+            if self.stop:
+                await self.mot.set_pos(0, speed=100)
                 await self.drive.set_pos(0, speed=100)
                 await sleep(1)
                 break
